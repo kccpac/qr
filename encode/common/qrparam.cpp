@@ -74,8 +74,9 @@ void qrparam::init(QRMode qrMode, ECLevel ecLevel, int len) {
         case QRMODE_JS_EIGHT:
             symbol_size = JS_EIGHT_SYM_SIZE;
             // B = 4 + C + 8D
-            size_per_sym = JS_EIGHT_SYM_SIZE;
-            estimated_qrdata_size += size_per_sym * len;             
+            m_size_per_sym = size_per_sym = JS_EIGHT_SYM_SIZE;
+            m_num_char_per_sym = 1;
+            m_qrdata_size += size_per_sym * len; 
             break;
         case QRMODE_KANJI:
             m_qrdata_size = -1;

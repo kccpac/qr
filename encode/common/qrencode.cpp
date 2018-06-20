@@ -67,16 +67,21 @@ int * qrencode::charsToSymbol(QRMode qrMode, char *url) {
             }  
             break;
         case QRMODE_JS_EIGHT:
+            for (i=0; i<wholeSymbolSize; i++) {
+                memcpy(tmpChars, ptr, numCharPerSymbol);
+                *intptr = (int) *tmpChars;
+                intptr++; ptr++;
+            }
             break;
         case QRMODE_KANJI:
     //        m_qrdata_size = -1;
             break;
     }
     
-    for (i=0; i<wholeSymbolSize+lastSymbol; i++) {    
-       std::cout << "qrSymbol "<< i << "=" <<qrSymbols[i] << "\n";
+   for (i=0; i<wholeSymbolSize+lastSymbol; i++) {    
+      printf("qrSymbol[%d] = %d (%c) \n", i ,qrSymbols[i] , qrSymbols[i]);
    }
-    delete tmpChars;
+    delete []tmpChars;
     return qrSymbols;
 }
    
@@ -90,15 +95,18 @@ int main(int argv, char **argc)
     QRMode qrMode = analyzer->analyze(url);
     std::cout << "NUM_QRMODE= " << qrMode << "\n";
 
+ //   qrMode = QRMODE_JS_EIGHT;
     qrencoder = new qrencode(url, qrMode, ECLEVEL_L);
     
     int *result = qrencoder->charsToSymbol(qrMode, url);
-     int i;
+    
+    delete result;
+/*     int i;
      
     for (i=0; i<ALPHANUMERIC_CHAR_SIZE; i++)
     {
         printf("%c(%x)\n ",  ALPHANUMERIC_CHAR_LIST[i], ALPHANUMERIC_CHAR_LIST[i]);
-        }
+        }*/
   /*  
     int i;
     
