@@ -26,6 +26,28 @@ enum QRMode{
     QRMODE_MAX = 3
 };
 
+enum PLACEMENT_ORIENTATION {
+    UP_VERTICAL = 0,
+    DOWN_VERTICAL = 1,
+    UP_TO_DOWN = 2,
+    DOWN_TO_UP = 3
+ //   UP_HORIZONTAL = 2,
+ //   DOWN_HORIZONTAL = 3
+};
+
+enum PLACEMENT_SHAPE {
+    REGULAR,
+    IRREULGAR // BYTE BY BYTE COPY
+};
+
+enum PLACEMENT_TYPE { // UPDATE THE MASK
+    TIMING_PATTERN = -8,
+    POS_DETECT_PATTERN = -4,
+    ALIGN_PATTERN =  -2,
+    INFORMATION = -1,
+    DATA = 0
+};
+
 enum ECLevel {
     ECLEVEL_UNDEFINED = -1,
     ECLEVEL_L = 0,
@@ -95,7 +117,6 @@ static int ALPHANUMERIC_CHAR_LIST[ALPHANUMERIC_CHAR_SIZE] = {
                     0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, // numeric:
                     0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5A, // alphabet
                     0x20, 0x24, 0x25, 0x2A, 0x2B, 0x2D, 0x2E, 0x2F, 0x3A}; // special character
-static int  JS_EIGHT_CHAR_LIST[MAX_NUM_CHARACTER];
 
 static int CHAR_TO_ALPHANUMERIC_SYM_LIST[MAX_NUM_CHARACTER] = {
 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 
@@ -125,7 +146,51 @@ static int CHAR_TO_ALPHANUMERIC_SYM_LIST[MAX_NUM_CHARACTER] = {
 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-
+/*
+static int data_capacity_info [NUM_VERSION+1][] = {
+// version, # of module side(A), Function pattern module(B), Format & version info module (C), data module except C, data capacity as codewords, reminder bits
+{0, -1, -1, -1, -1, -1, -1, 0},
+{1, 21, 202, 31, 208, 26, 0},
+{2, 25, 235, 31, 359, 44, 7},
+{3, 29, 243, 31, 567, 70, 7},
+{4, 33, 251, 31, 807, 100, 7},
+{5, 37, 259, 31, 1079, 134, 7},
+{6, 41, 267, 31, 1383, 172, 7},
+{7, 45, 390, 67, 1568, 196, 0},
+{8, 49, 398, 67, 1936, 242, 0},
+{9, 53, 406, 67, 2336, 292, 0},
+{10, 57, 414, 67, 2768, 346, 0},
+{11, 61, 422, 67, 3232, 404, 0},
+{12, 65, 430, 67, 3728, 466, 0},
+{13, 69, 438, 67, 4256, 532, 0},
+{14, 73, 611, 67, 4651, 581, 3},
+{15, 77, 619, 67, 5243, 655, 3},
+{16, 81, 627, 67, 5867, 733, 3},
+{17, 85, 635, 67, 6523, 815, 3},
+{18, 89, 643, 67, 7211, 901, 3},
+{19, 93, 651, 67, 7931, 991, 3},
+{20, 97, 659, 67, 8683, 1085, 3},
+{21, 101, 882, 67, 9252, 1156, 4},
+{22, 105, 890, 67, 10068, 1258, 4},
+{23, 109, 898, 67, 10916, 1364, 4},
+{24, 113, 906, 67, 11796, 1474, 4},
+{25, 117, 914, 67, 12708, 1588, 4},
+{26, 121, 922, 67, 13652, 1706, 4},
+{27, 125, 930, 67, 14628, 1828, 4},
+{28, 129, 1203, 67, 15371, 1921, 3},
+{29, 133, 1211, 67, 16411, 2051, 3},
+{30, 137, 1219, 67, 17483, 2185, 3},
+{31, 141, 1227, 67, 18587, 2323, 3},
+{32, 145, 1235, 67, 19723, 2465, 3},
+{33, 149, 1243, 67, 20891, 2611, 3},
+{34, 153, 1251, 67, 22091, 2761, 3},
+{35, 157, 1574, 67, 23008, 2876, 0},
+{36, 161, 1582, 67, 24272, 3034, 0},
+{37, 165, 1590, 67, 25568, 3196, 0},
+{38, 169, 1598, 67, 26896, 3362, 0},
+{39, 173, 1606, 67, 28256, 3532, 0},
+{40, 177, 1614, 67, 29648, 3706, 0}};
+*/
 static int erdata_capacity[NUM_QRMODE][NUM_ECLEVEL][NUM_VERSION+1] = {
     {{ -1, 41,77,127,187,255,322,370,461,
         552,652,772,883,1022,1101,1250,1408,
@@ -251,6 +316,11 @@ static int erdata_size[NUM_VERSION][NUM_ECLEVEL] = {
     {2812,2216,1582,1222},
     {2956,2334,1666,1276}
 };
+
+typedef struct qrsymbol {
+        int *codewords;
+        int len;
+} qrsymbol;
 
 #endif
 

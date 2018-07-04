@@ -26,6 +26,7 @@ class qrparam {
         int m_qrdata_size;
         int m_num_char_per_sym;// = symbol_size = NUMERIC_SYM_SIZE;
         int m_size_per_sym;// = size_per_sym = CHAR_SIZE_PER_NUMERIC_SYM;
+        int m_lastSym_size;
         
         ECLevel m_level;
         int m_input_len;

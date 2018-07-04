@@ -1,30 +1,28 @@
 #include "string.h"
 #include "inputanalyzer.h"
 
-
-
 inputanalyzer::inputanalyzer() {
     init();
 }
 
 inputanalyzer::~inputanalyzer() {
 //std::list<int>::iterator itr;
-  for (int i=QRMODE_NUMERIC; i<QRMODE_MAX; i++)  {
+  for (int i=0; i<NUM_QRMODE; i++)  {
       m_qrCharList[i].clear();
 
 //          std::cout << "i= " << i << " " << m_qrCharList[i].size() << "\n"; 
      }
-      std::cout << "~inputanalyzer end  \n";
+//      std::cout << "~inputanalyzer end  \n";
 }
 
 void inputanalyzer::init() {
-    
+   /*
     for (int i=0; i<MAX_NUM_CHARACTER; i++)
         JS_EIGHT_CHAR_LIST[i] = i;
-  
+  */
     m_qrCharList[QRMODE_NUMERIC].assign(NUMERIC_CHAR_LIST, NUMERIC_CHAR_LIST+NUMERIC_CHAR_SIZE);
     m_qrCharList[QRMODE_ALPHANUMERIC].assign(ALPHANUMERIC_CHAR_LIST, ALPHANUMERIC_CHAR_LIST+ALPHANUMERIC_CHAR_SIZE);
-    m_qrCharList[QRMODE_JS_EIGHT].assign(JS_EIGHT_CHAR_LIST, JS_EIGHT_CHAR_LIST+MAX_NUM_CHARACTER);
+ //   m_qrCharList[QRMODE_JS_EIGHT].assign(JS_EIGHT_CHAR_LIST, JS_EIGHT_CHAR_LIST+MAX_NUM_CHARACTER);
  //   m_qrCharList[QRMODE_KANJI].clear();
 
 }

@@ -79,6 +79,7 @@ void qrparam::init(QRMode qrMode, ECLevel ecLevel, int len) {
             m_qrdata_size += size_per_sym * len; 
             break;
         case QRMODE_KANJI:
+            // B = 4 + C + 13D
             m_qrdata_size = -1;
             break;
         default:

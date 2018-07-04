@@ -1,42 +1,54 @@
 #include <iostream>
+
 #include "stdio.h"
 #include "global.h"
 #include "inputanalyzer.h"
 #include "qrencode.h"
+#include "ssconverter.h"
 #include "string.h"
+#include "iffmpeg.h"
+#include "qrimage.h"
+
 
 
 qrencode::qrencode() {
+    m_ffmpeg = new iffmpeg[1];
 }
 
 qrencode::~qrencode() {
     delete m_qrparam;
+    delete []m_ffmpeg;
 }
 
 qrencode::qrencode(char *url, QRMode qrMode, ECLevel ecLevel) : qrencode() {
 
     int len = strlen(url);
     m_qrparam = new qrparam(qrMode, ecLevel, len);
+
  //   erdata_capacity[qrMode][NUM_ECLEVEL][NUM_VERSION] 
 }
 
-int * qrencode::charsToSymbol(QRMode qrMode, char *url) {
+qrsymbol  qrencode::charsToSymbol(QRMode qrMode, char *url) {
     int numCharPerSymbol = m_qrparam->get_NumCharPerQRSymbol();
     int wholeSymbolSize = m_qrparam->get_InputLen()/numCharPerSymbol;
     bool lastSymbol = (m_qrparam->get_InputLen()%numCharPerSymbol == 0) ? 0: 1;
 //    int qrSymbolSize = urlLen/numCharPerSymbol + (urlLen%numCharPerSymbol == 0) ? 0: 1;
-    char *tmpChars = new char [numCharPerSymbol];
-    int *qrSymbols = new int [wholeSymbolSize+lastSymbol];
+    char tmpChars[numCharPerSymbol+1];// = new char [numCharPerSymbol];
+    qrsymbol qrs;
+    qrs.codewords = new int [wholeSymbolSize+lastSymbol];
+    qrs.len = wholeSymbolSize+lastSymbol;
+//    int *qrSymbols = new int [wholeSymbolSize+lastSymbol];
+    int *intptr = qrs.codewords;
     char *ptr = url;
-    int *intptr = qrSymbols;
-    
+ 
     int i=0;
  
     std::cout <<  "m_qrparam->get_InputLen() = " << m_qrparam->get_InputLen() <<"\n";
     std::cout << "numCharPerSymbol =  "<<numCharPerSymbol << "\n";
     std::cout << "wholeSymbolSize = " <<wholeSymbolSize << "\n";
     std::cout << "lastSymbol = " << m_qrparam->get_InputLen()%numCharPerSymbol << "(" << lastSymbol << ")\n";
-                         
+
+    memset(tmpChars, 0, numCharPerSymbol+1);
     switch (qrMode) {
         case QRMODE_NUMERIC: // subset of ALPHANUMERIC
             for (i=0; i<wholeSymbolSize; i++) {
@@ -76,21 +88,38 @@ int * qrencode::charsToSymbol(QRMode qrMode, char *url) {
         case QRMODE_KANJI:
     //        m_qrdata_size = -1;
             break;
+        default:
+            break;
     }
     
    for (i=0; i<wholeSymbolSize+lastSymbol; i++) {    
-      printf("qrSymbol[%d] = %d (%c) \n", i ,qrSymbols[i] , qrSymbols[i]);
+//      printf("qrSymbol[%d] = %d (%c) \n", i ,qrSymbols[i] , qrSymbols[i]);
+        printf("qrSymbol[%d] = %d (%c) \n", i ,qrs.codewords[i] , qrs.codewords[i] );
    }
-    delete []tmpChars;
-    return qrSymbols;
+ //   delete []tmpChars;
+    return qrs;//qrSymbols;
+}
+
+unsigned char * symbolToQRCodeword(qrsymbol symbols, QRMode qrMode) {
+    return NULL;
+}
+
+bool qrencode::encode(qrsymbol symbols) {
+    ssconverter bEncode(m_qrparam);
+    qrimage image(m_qrparam->get_QRVersion());
+    printf("width  %d height %d \n",  image.getQRImageWidth(),  image.getQRImageHeight());
+    m_ffmpeg->setup(image.getQRImageWidth(), image.getQRImageHeight());
+    bEncode.write(&symbols);
+    m_ffmpeg->encode(NULL);
+    return true;
 }
    
 int main(int argv, char **argc)
 {
     qrencode *qrencoder = NULL;    
-    char url[] = {"AC-42"};//{"0123456789012345"};//{"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};//{"1234567890"};
+    char url[] = /*{"AC-42"};*/{"0123456789012345"};//{"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};//{"1234567890"};
   //  qrparam param(url, ECLEVEL_L);
-      inputanalyzer *analyzer = new inputanalyzer();
+      inputanalyzer *analyzer = new inputanalyzer[1];
 
     QRMode qrMode = analyzer->analyze(url);
     std::cout << "NUM_QRMODE= " << qrMode << "\n";
@@ -98,9 +127,12 @@ int main(int argv, char **argc)
  //   qrMode = QRMODE_JS_EIGHT;
     qrencoder = new qrencode(url, qrMode, ECLEVEL_L);
     
-    int *result = qrencoder->charsToSymbol(qrMode, url);
-    
-    delete result;
+    qrsymbol symbols = qrencoder->charsToSymbol(qrMode, url);
+
+    std::cout << " # symbol: " << symbols.len << "\n";
+   qrencoder->encode(symbols);
+
+//    delete qrSymbols;
 /*     int i;
      
     for (i=0; i<ALPHANUMERIC_CHAR_SIZE; i++)
@@ -139,9 +171,9 @@ int main(int argv, char **argc)
 0xff, 0xff, 0xff, 0xff, 0xff};
 
     std::cout << "xx = " << sizeof(xx)/sizeof(int) << "\n";*/
-    int tmp[256];
+//    int tmp[256];
  //   memset(tmp, 0xFF, 256*sizeof(int));
-    int count = 0;
+//    int count = 0;
     
 /*    for (i=0; i<ALPHANUMERIC_CHAR_SIZE; i++) {
         printf("ALPHANUMERIC_CHAR_LIST[%d] = (%c) %d \n", ALPHANUMERIC_CHAR_LIST[i], ALPHANUMERIC_CHAR_LIST[i], xx[(int)ALPHANUMERIC_CHAR_LIST[i]]);
@@ -186,7 +218,10 @@ int main(int argv, char **argc)
         for (j=0; j<NUM_ECLEVEL; j++)
             std::cout << "k = " << k << " j = " << j << " = " << erdata_size[k][j] << "\n";
     */        
-    delete analyzer;
+    delete [] symbols.codewords;
+
+    delete [] analyzer;
     delete qrencoder;
+
     return 0;
 }
