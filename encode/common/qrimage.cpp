@@ -8,7 +8,7 @@
 }
          
 qrimage::~qrimage() {
-    if (m_qrBaseMemory) delete []m_qrBaseMemory;
+    if (m_qrBaseMemory) delete [] m_qrBaseMemory;
     m_qrBaseMemory = NULL;
     
 //   delete []m_pdp_location;

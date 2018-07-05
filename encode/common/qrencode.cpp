@@ -108,9 +108,12 @@ bool qrencode::encode(qrsymbol symbols) {
     ssconverter bEncode(m_qrparam);
     qrimage image(m_qrparam->get_QRVersion());
     printf("width  %d height %d \n",  image.getQRImageWidth(),  image.getQRImageHeight());
-    m_ffmpeg->setup(image.getQRImageWidth(), image.getQRImageHeight());
+    m_ffmpeg->setup(image.getQRImageWidth(), image.getQRImageHeight(), image.getQRImagePitch());
     bEncode.write(&symbols);
-    m_ffmpeg->encode(NULL);
+
+    m_ffmpeg->start_encode(image.getImageData());
+    m_ffmpeg->finish_encode();
+    m_ffmpeg->save();
     return true;
 }
    

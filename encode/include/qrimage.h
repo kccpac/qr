@@ -39,12 +39,13 @@ class qrimage {
 
         qrimage(int version);
         ~qrimage();
-        unsigned char * generate();       
+        unsigned char * generate();
+        unsigned char * getImageData() { return  (unsigned char*) (m_qrBaseMemory+m_item_pointer.image_location); }
         int getQRImageSize(){return m_image_pitch*m_image_dim;} 
-         int getQRImagePitch() {return m_image_pitch;} 
+        int getQRImagePitch() {return m_image_pitch;}
         int getQRImageWidth() {return m_image_dim;} 
         int getQRImageHeight() {return m_image_dim;} 
-        
+
     private:
         void init(int version);   
         void addPattern(QRPATTERN pattern);
