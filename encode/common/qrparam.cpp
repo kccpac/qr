@@ -6,7 +6,7 @@
  qrparam::qrparam() {
     m_mode = QRMODE_UNDEFINED;     
     m_qrcode_size = m_qrdata_size = m_num_char_per_sym = m_size_per_sym = -1;
-    ECLevel m_level = ECLEVEL_UNDEFINED;
+ //   ECLevel m_level = ECLEVEL_UNDEFINED;
  }
  
 qrparam::~qrparam() {
@@ -21,7 +21,7 @@ void qrparam::init(QRMode qrMode, ECLevel ecLevel, int len) {
 
     int symbol_size = -1; 
     int size_per_sym = -1;
-    int estimated_qrdata_size = -1;
+//    int estimated_qrdata_size = -1;
     int *dataCapacity;
     int version = 0;
     int R[] = {0, 4, 7};

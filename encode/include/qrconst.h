@@ -1,7 +1,7 @@
 #ifndef _QRCONST_H
 #define _QRCONST_H
 
-#include "global.h"
+//#include "global.h"
 
 #define UNINITIALIZED -1
 #define QR_SYMBOL_BASE_DIMENSION 21
@@ -65,7 +65,7 @@
 #define BCH_HORZ_VINFO_ROW 3
 
 //Version information bit stream for each version (from 7 to 40)
-static int BCH_VERSION_INFO[] = { // 6 msg bits, 12 bit error bits
+const static int BCH_VERSION_INFO[] = { // 6 msg bits, 12 bit error bits
 // No Version Information will result in an all-zero data string since only Versions 7 to 40 symbols contain the Version
 // Information. Masking is not therefore applied to the Version Information.
 // The Version Information areas are the 6x3 module block above the Timing Pattern and immediately to the left of

@@ -35,6 +35,7 @@ void iffmpeg::init() {
     
     m_out_image = new unsigned char [DEFAULT_BUFFER_SIZE];
     m_image_buffer_size = 2048;
+    m_out_size = 0;
 
     
 }
@@ -89,9 +90,10 @@ AVFrame * iffmpeg::getAVFRame(unsigned char *qrimage) {
     unsigned char *image_ptr;
     for (int y = 0; y < m_enc_ctx->height; y++) {
         image_ptr = qrimage + y *m_image_pitch;
-        for (int x = 0; x < m_enc_ctx->width; x++) {
-            frame->data[0][y * frame->linesize[0] + x] = *(image_ptr+x);//128;//x;// + y;// + i * 3;
-        }
+        //for (int x = 0; x < m_enc_ctx->width; x++) {
+        memcpy(&frame->data[0][y * frame->linesize[0]], image_ptr, m_enc_ctx->width);
+        //frame->data[0][y * frame->linesize[0] + x] = *(image_ptr+x);//128;//x;// + y;// + i * 3;
+        //}
     }
     return frame;
 }
@@ -149,14 +151,16 @@ void iffmpeg::finish_encode() {
 
 void iffmpeg::save() {
 
-    FILE *f = fopen("test.png", "wb");
-    printf("m_out_size %d \n", m_out_size);
-    if (!f) {
+    FILE *f = NULL ;
+//    printf("m_out_size %d \n", m_out_size);
+    if (!m_out_image) return;
+    if ((f =fopen("test.png", "wb")) == NULL) {
         printf("File could not open\n");
-        exit(1);
+        return;
+       // exit(1);
     }
     fwrite(m_out_image, 1, m_out_size, f);
-    fclose(f);
+    if (f) fclose(f);
 }
 
 

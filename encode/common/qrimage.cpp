@@ -1,6 +1,6 @@
 #include <iostream>
 #include <memory.h>
-#include "qrconst.h"
+#include "global.h"
 #include "qrimage.h"
 
  qrimage::qrimage(int version) {
@@ -52,9 +52,9 @@ void qrimage::init(int version) {
     m_num_align_pattern = AlignPatternsPosition[m_version][0];
     
     m_item_pointer.image_location = 0; // QR image 
-    total_qrBaseMemory_size +=  m_image_pitch*m_image_pitch*sizeof(unsigned char);
+    total_qrBaseMemory_size +=  align16(m_image_dim*m_image_pitch*sizeof(unsigned char));
     m_item_pointer.map_location = total_qrBaseMemory_size;
-    total_qrBaseMemory_size +=  align16(m_image_pitch*m_image_pitch*sizeof(int));   
+    total_qrBaseMemory_size +=  align16(m_image_dim*m_image_pitch*sizeof(int));
     m_item_pointer.PDPObject_location = total_qrBaseMemory_size;// Position Detect Pattern
     total_qrBaseMemory_size += align16(OUTER_POS_DETECT_PATTERN_SIZE*OUTER_POS_DETECT_PATTERN_SIZE*sizeof(unsigned char));
     m_item_pointer.APObject_location = total_qrBaseMemory_size;  // Alignment Pattern   
@@ -78,8 +78,8 @@ void qrimage::init(int version) {
 
     m_qrBaseMemory = new unsigned char [total_qrBaseMemory_size];
     memset(m_qrBaseMemory, 0, total_qrBaseMemory_size*sizeof(unsigned char));
-    memset(m_qrBaseMemory+m_item_pointer.image_location, 255, m_image_pitch*m_image_pitch*sizeof(unsigned char));
-    memset(m_qrBaseMemory+m_item_pointer.map_location, UNINITIALIZED, m_image_pitch*m_image_pitch*sizeof(int));
+    memset(m_qrBaseMemory+m_item_pointer.image_location, 255, m_image_dim*m_image_pitch*sizeof(unsigned char));
+    memset(m_qrBaseMemory+m_item_pointer.map_location, UNINITIALIZED, m_image_dim*m_image_pitch*sizeof(int));
     
  //   int countPattern = 0;
 
@@ -100,7 +100,7 @@ void qrimage::init(int version) {
     
     m_vinfo = (patternInfo *)  (m_qrBaseMemory + m_item_pointer.vinfo_location);
     
-    m_vinfo[0].setStartpos({m_image_dim - OUTER_POS_DETECT_PATTERN_SIZE - 1 - BCH_VINFO_SIZE/BCH_VERT_VINFO_ROW, 0});
+    m_vinfo[0].setStartpos({m_image_dim - OUTER_POS_DETECT_PATTERN_SIZE - 1 - (BCH_VINFO_SIZE/BCH_VERT_VINFO_ROW), 0});
     m_vinfo[0].setWidth(BCH_VINFO_SIZE/BCH_VERT_VINFO_ROW); m_vinfo[0].setHeight(BCH_VERT_VINFO_ROW);
     m_vinfo[1].setStartpos({0, m_image_dim - OUTER_POS_DETECT_PATTERN_SIZE - 1 - BCH_HORZ_VINFO_ROW});
     m_vinfo[1].setWidth(BCH_VINFO_SIZE/BCH_HORZ_VINFO_ROW); m_vinfo[1].setHeight(BCH_HORZ_VINFO_ROW);
@@ -190,10 +190,10 @@ void qrimage::init_map_object() {
 //    memset(map_ptr +(HORZ_FINFO_LOCATION+1)*m_image_pitch-size, FORMAT_INFO, size*sizeof(int));
     for (j=0; j<size; j++) {
         //memset(map_ptr +j*m_image_pitch+VERT_FINFO_LOCATION, 0x20, /*FORMAT_INFO,*/ sizeof(int));
-        #define HORZ_FINFO_LOCATION BASE_FINFO_LOCATION
+      //  #define HORZ_FINFO_LOCATION BASE_FINFO_LOCATION
         *(map_ptr + HORZ_FINFO_LOCATION*m_image_pitch + j) = 
         *(map_ptr +HORZ_FINFO_LOCATION*m_image_pitch+m_image_dim-j-1) =
-        *(map_ptr +(m_image_dim-j+1)*m_image_pitch+VERT_FINFO_LOCATION) = 
+        *(map_ptr +(m_image_dim-j-1)*m_image_pitch+VERT_FINFO_LOCATION) = 
         *(map_ptr +j*m_image_pitch+VERT_FINFO_LOCATION) = FORMAT_INFO;
  //        printf("## HORZ_FINFO_LOCATION %d %d %d \n", j, (HORZ_FINFO_LOCATION+1)*m_image_pitch-j-1, map_ptr[(HORZ_FINFO_LOCATION+1)*m_image_pitch-j-1] );
  //        printf("HORZ_FINFO_LOCATION*m_image_pitch + j %d \n", HORZ_FINFO_LOCATION*m_image_pitch + j);
@@ -332,8 +332,8 @@ void qrimage::copy_pattern_objects(int pattern_location, patternInfo *pdp, int p
         p = pdp[i].getStartpos();
         sub_image_ptr = image_ptr + p.y*m_image_pitch + p.x;
         width = pdp[i].getWidth();  height = pdp[i].getHeight(); 
-        printf("pdp[%d].getWidth() = %d pdp[%d].getHeight() = %d \n", i, pdp[i].getWidth(), i, pdp[i].getHeight());
-        for (int j=0; j<pdp[i].getHeight(); j++) {
+//        printf("pdp[%d].getWidth() = %d pdp[%d].getHeight() = %d \n", i, pdp[i].getWidth(), i, pdp[i].getHeight());
+        for (int j=0; j<height; j++) {
             memcpy(sub_image_ptr +j*m_image_pitch, object_ptr + j*width, width);
         }
     }
@@ -347,7 +347,7 @@ void qrimage::create_empty_image() {
     unsigned char *obj;
     unsigned char *image_ptr;
     int *intptr;
-    int *map_ptr;
+ //   int *map_ptr;
     int i, j, k;
     
     copy_pattern_objects(m_item_pointer.APObject_location, mAlignPatterns,  AlignPatternsPosition[m_version][0]);
@@ -362,7 +362,7 @@ void qrimage::create_empty_image() {
         int bitCount = 0;
         image_ptr = m_qrBaseMemory + m_item_pointer.image_location; 
         
-        printf("version info pos (%d, %d) m_vinfo[i].getHeight() %d m_vinfo[i].getWidth() %d \n", p.x, p.y, m_vinfo[i].getHeight(), m_vinfo[i].getWidth());
+        printf("version info pos (%d, %d) m_vinfo[%d].getHeight() %d m_vinfo[i].getWidth() %d \n", p.x, p.y, i, m_vinfo[i].getHeight(), m_vinfo[i].getWidth());
         for (j=0; j<m_vinfo[i].getHeight(); j++) {
             obj = image_ptr + (p.y+j)*m_image_pitch + p.x;
             for (k=0; k<m_vinfo[i].getWidth(); k++) {

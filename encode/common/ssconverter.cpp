@@ -1,12 +1,13 @@
-#include "../include/ssconverter.h"
+#include <stdio.h>
+#include "ssconverter.h"
 
 void swapLittle(short test) { 
     char *ptr = (char*)&test;
- //   printf("swapLittle %d %d %d %d \n ", ptr[0], ptr[1], ptr[2], ptr[20]); 
+    printf("swapLittle %d %d \n", ptr[0], ptr[1]);
 }
 void swapBig(short test) {
     char *ptr = (char*)&test;
- //   printf("swapBig %d %d %d %d \n ", ptr[0], ptr[1], ptr[2], ptr[3]); 
+    printf("swapBig %d %d \n", ptr[0], ptr[1]);
 }
 
 
@@ -16,6 +17,7 @@ ssconverter::~ssconverter() {
     delete [] m_data;
     delete [] bsFcn;
 }
+
 ssconverter::ssconverter(qrparam *param/*int qrDataSize, int cwSizeInbits*/) {    
     m_bLittleEndian = isLittleEndian();
     m_param = param;
@@ -70,6 +72,7 @@ int ssconverter::write(qrsymbol *qrSymbols) {
         cwbuf = (cwbuf << (m_qrdataSize - bufpos)) + qrSymbols->codewords[qrSymbols->len-1]; 
     }   
  //   writedata(0, 0);
+    return 0;
 
 }
 

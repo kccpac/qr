@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "stdio.h"
-#include "global.h"
+//#include "global.h"
 #include "inputanalyzer.h"
 #include "qrencode.h"
 #include "ssconverter.h"
@@ -65,11 +65,11 @@ qrsymbol  qrencode::charsToSymbol(QRMode qrMode, char *url) {
         case QRMODE_ALPHANUMERIC: // subset of JS_EIGHT
            for (i=0; i<wholeSymbolSize; i++) {
                 memcpy(tmpChars, ptr, numCharPerSymbol);
-                printf( "tmpChars[0] = %d (%c)  CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[0]] %d \n " , tmpChars[0], tmpChars[0] ,CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[0]]);
-                printf( "tmpChars[1] = %d (%c)  CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[1]] %d \n " , tmpChars[1], tmpChars[1] ,CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[1]]);
+  //              printf( "tmpChars[0] = %d (%c)  CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[0]] %d \n " , tmpChars[0], tmpChars[0] ,CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[0]]);
+  //              printf( "tmpChars[1] = %d (%c)  CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[1]] %d \n " , (int)tmpChars[1],  (int)tmpChars[1] ,CHAR_TO_ALPHANUMERIC_SYM_LIST[(int)tmpChars[1]]);
                 
-                *intptr = CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[0]]*ALPHANUMERIC_CHAR_SIZE+
-                               CHAR_TO_ALPHANUMERIC_SYM_LIST[tmpChars[1]];
+                *intptr = CHAR_TO_ALPHANUMERIC_SYM_LIST[(int)tmpChars[0]]*ALPHANUMERIC_CHAR_SIZE+
+                               CHAR_TO_ALPHANUMERIC_SYM_LIST[(int)tmpChars[1]];
                 ptr+=numCharPerSymbol; intptr++;
             }  
             if (lastSymbol) {
@@ -106,6 +106,7 @@ unsigned char * symbolToQRCodeword(qrsymbol symbols, QRMode qrMode) {
 
 bool qrencode::encode(qrsymbol symbols) {
     ssconverter bEncode(m_qrparam);
+    printf("version: %d \n", m_qrparam->get_QRVersion());
     qrimage image(m_qrparam->get_QRVersion());
     printf("width  %d height %d \n",  image.getQRImageWidth(),  image.getQRImageHeight());
     m_ffmpeg->setup(image.getQRImageWidth(), image.getQRImageHeight(), image.getQRImagePitch());
@@ -120,7 +121,7 @@ bool qrencode::encode(qrsymbol symbols) {
 int main(int argv, char **argc)
 {
     qrencode *qrencoder = NULL;    
-    char url[] = /*{"AC-42"};*/{"0123456789012345"};//{"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};//{"1234567890"};
+    char url[] = {"AC-42"};//{"0123456789012345"};//{"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"};//{"1234567890"};
   //  qrparam param(url, ECLEVEL_L);
       inputanalyzer *analyzer = new inputanalyzer[1];
 

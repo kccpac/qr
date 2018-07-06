@@ -1,8 +1,8 @@
 #ifndef _BITSTREAM_H
 #define _BITSTREAM_H
 
-#include "stdio.h"
-#include "global.h"
+//#include "stdio.h"
+//#include "global.h"
 #include "qrparam.h"
 #include "qrimage.h"
 

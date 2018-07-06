@@ -40,6 +40,7 @@ class qrimage {
         qrimage(int version);
         ~qrimage();
         unsigned char * generate();
+        int* getMapData() { return  (int*) (m_qrBaseMemory+m_item_pointer.map_location); }
         unsigned char * getImageData() { return  (unsigned char*) (m_qrBaseMemory+m_item_pointer.image_location); }
         int getQRImageSize(){return m_image_pitch*m_image_dim;} 
         int getQRImagePitch() {return m_image_pitch;}
