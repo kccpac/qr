@@ -64,92 +64,76 @@
 #define BCH_VERT_VINFO_ROW 6 
 #define BCH_HORZ_VINFO_ROW 3
 
-//Version information bit stream for each version (from 7 to 40)
-const static int BCH_VERSION_INFO[] = { // 6 msg bits, 12 bit error bits
-// No Version Information will result in an all-zero data string since only Versions 7 to 40 symbols contain the Version
-// Information. Masking is not therefore applied to the Version Information.
-// The Version Information areas are the 6x3 module block above the Timing Pattern and immediately to the left of
-// the top right Position Detection Pattern Separator, and the 3x6 module block to the left of the Timing Pattern and
-// immediately above the lower left Position Detection Pattern separator.
-    0x07C94,
-    0x085BC,
-    0x09A99,
-    0x0A4D3,
-    0x0BBF6,
-    0x0C762,
-    0x0D847,
-    0x0E60D,
-    0x0F928,
-    0x10B78,
-    0x1145D,
-    0x12A17,
-    0x13532,
-    0x149A6,
-    0x15683,
-    0x168C9,
-    0x177EC,
-    0x18EC4,
-    0x191E1,
-    0x1AFAB,
-    0x1B08E,
-    0x1CC1A,
-    0x1D33F,
-    0x1ED75,
-    0x1F250,
-    0x209D5,
-    0x216F0,
-    0x228BA,
-    0x2379F,
-    0x24B0B,
-    0x2542E,
-    0x26A64,
-    0x27541,
-    0x28C69
+#define NUM_QRMODE QRMODE_MAX + 1
+#define NUM_ECLEVEL ECLEVEL_MAX + 1
+#define NUM_VERSION 40
+
+#define NUMERIC_CHAR_SIZE 10
+#define ALPHANUMERIC_CHAR_SIZE 45
+#define MAX_NUM_CHARACTER 256
+
+#define NUMERIC_SYM_SIZE 10 // 8.3.2
+#define ALPHANUMERIC_SYM_SIZE 11 // 8.3.3
+#define JS_EIGHT_SYM_SIZE 8 // 8.3.4
+
+#define CHAR_SIZE_PER_NUMERIC_SYM 3
+#define CHAR_SIZE_PER_ALPHANUMERIC_SYM 2
+#define CHAR_SIZE_PER_JS_EIGHT_SYM 1
+
+enum QRMode{
+    QRMODE_UNDEFINED = -1,
+    QRMODE_NUMERIC = 0, // subset of ALPHANUMERIC
+    QRMODE_ALPHANUMERIC = 1, // subset of JS_EIGHT
+    QRMODE_JS_EIGHT = 2,
+    QRMODE_KANJI = 3,    // 2 byte character set
+    QRMODE_MAX = 3
 };
 
-// Row/column coordinates of center module of Alignment Patterns
-static int AlignPatternsPosition[NUM_VERSION+1][MAX_APP_COMBINATION + 1] = {
-    {0, -1, -1, -1, -1, -1, -1, -1},
-    {0, -1, -1, -1, -1, -1, -1, -1},
-    {1, 6, 18, -1, -1, -1, -1, -1},
-    {1, 6, 22, -1, -1, -1, -1, -1},
-    {1, 6, 26, -1, -1, -1, -1, -1},
-    {1, 6, 30, -1, -1, -1, -1, -1},
-    {1, 6, 34, -1, -1, -1, -1, -1},
-    {6, 6, 22, 38, -1, -1, -1, -1},
-    {6, 6, 24, 42, -1, -1, -1, -1},
-    {6, 6, 26, 46, -1, -1, -1, -1},
-    {6, 6, 28, 50, -1, -1, -1, -1},
-    {6, 6, 30, 54, -1, -1, -1, -1},
-    {6, 6, 32, 58, -1, -1, -1, -1},
-    {6, 6, 34, 62, -1, -1, -1, -1},
-    {13, 6, 26, 46, 66, -1, -1, -1},
-    {13, 6, 26, 48, 70, -1, -1, -1},
-    {13, 6, 26, 50, 74, -1, -1, -1},
-    {13, 6, 30, 54, 78, -1, -1, -1},
-    {13, 6, 30, 56, 82, -1, -1, -1},
-    {13, 6, 30, 58, 86, -1, -1, -1},
-    {13, 6, 34, 62, 90, -1, -1, -1},
-    {22, 6, 28, 50, 72, 94, -1, -1},
-    {22, 6, 26, 50, 74, 98, -1, -1},
-    {22, 6, 30, 54, 78, 102, -1, -1},
-    {22, 6, 28, 54, 80, 106, -1, -1},
-    {22, 6, 32, 58, 84, 110, -1, -1},
-    {22, 6, 30, 58, 86, 114, -1, -1},
-    {22, 6, 34, 62, 90, 118, -1, -1},
-    {33, 6, 26, 50, 74, 98, 122, -1},
-    {33, 6, 30, 54, 78, 102, 126, -1},
-    {33, 6, 26, 52, 78, 104, 130, -1},
-    {33, 6, 30, 56, 82, 108, 134, -1},
-    {33, 6, 34, 60, 86, 112, 138, -1},
-    {33, 6, 30, 58, 86, 114, 142, -1},
-    {33, 6, 34, 62, 90, 118, 146, -1},
-    {46, 6, 30, 54, 78, 102, 126, 150},
-    {46, 6, 24, 50, 76, 102, 128, 154},
-    {46, 6, 28, 54, 80, 106, 132, 158},
-    {46, 6, 32, 58, 84, 110, 136, 162},
-    {46, 6, 26, 54, 82, 110, 138, 166},
-    {46, 6, 30, 58, 86, 114, 142, 170}
+enum PLACEMENT_ORIENTATION {
+    UP_VERTICAL = 0,
+    DOWN_VERTICAL = 1,
+    UP_TO_DOWN = 2,
+    DOWN_TO_UP = 3
+ //   UP_HORIZONTAL = 2,
+ //   DOWN_HORIZONTAL = 3
 };
+
+enum PLACEMENT_SHAPE {
+    REGULAR,
+    IRREULGAR // BYTE BY BYTE COPY
+};
+
+enum PLACEMENT_TYPE { // UPDATE THE MASK
+    TIMING_PATTERN = -8,
+    POS_DETECT_PATTERN = -4,
+    ALIGN_PATTERN =  -2,
+    INFORMATION = -1,
+    DATA = 0
+};
+
+enum ECLevel {
+    ECLEVEL_UNDEFINED = -1,
+    ECLEVEL_L = 0,
+    ECLEVEL_M = 1,
+    ECLEVEL_Q = 2 ,
+    ECLEVEL_H = 3 ,
+    ECLEVEL_MAX = 4
+};
+
+enum QRModeIndicator {
+    ECI = 0x0111,
+    NUMERIC = 0x0001,
+    ALPHANUMERIC = 0x0010,
+    EIGHT_BIT_BYTE  = 0x0100,
+    KANJI  = 0x1000,
+    STRUCTURED_APPEND  = 0x0011,
+    FNC1  = 0x01011001, //(First position -  4bits, 2nd position)
+    END_OF_MSG = 0x0000, // Terminator
+};
+
+typedef struct qrsymbol {
+        int *codewords;
+        int len;
+} qrsymbol;
 
 #endif

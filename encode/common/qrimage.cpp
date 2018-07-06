@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory.h>
+#include "qrconst.h"
 #include "global.h"
 #include "qrimage.h"
 
@@ -145,7 +146,7 @@ void qrimage::init_app_object() {
 
     struct pos bpos = {(OUTER_ALIGN_PATTERN_SIZE-INNER_ALIGN_PATTERN_SIZE)/2, 
                                  (OUTER_ALIGN_PATTERN_SIZE-INNER_ALIGN_PATTERN_SIZE)/2};
-    int *positions = AlignPatternsPosition[m_version];
+    const int *positions = AlignPatternsPosition[m_version];
     int countPattern = 0;
     int i, j;
         

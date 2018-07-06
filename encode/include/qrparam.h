@@ -1,7 +1,7 @@
 #ifndef _QRPARAM_H
 #define  _QRPARAM_H
 
-#include "global.h"
+#include "qrconst.h"
 
 class qrparam {
     public:    

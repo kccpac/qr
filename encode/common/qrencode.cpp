@@ -2,14 +2,15 @@
 
 #include "stdio.h"
 //#include "global.h"
+
+#include "qrconst.h"
+#include "global.h"
 #include "inputanalyzer.h"
-#include "qrencode.h"
 #include "ssconverter.h"
 #include "string.h"
 #include "iffmpeg.h"
 #include "qrimage.h"
-
-
+#include "qrencode.h"
 
 qrencode::qrencode() {
     m_ffmpeg = new iffmpeg[1];

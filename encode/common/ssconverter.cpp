@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "qrconst.h"
+#include "global.h"
 #include "ssconverter.h"
 
 void swapLittle(short test) { 
@@ -37,7 +39,7 @@ bool ssconverter::isLittleEndian() {
 }
 
 int ssconverter::writeheader() {
-
+    return 0;
 }
 
 void ssconverter::generatePlacementMap(qrimage base_image) {
@@ -81,4 +83,5 @@ int ssconverter::write(qrsymbol *qrSymbols) {
 int ssconverter::writedata(int dataToSubmit, int size) {
  //(*bsFcn)(&test);
  // (*bsFcn)((short*)&dataToSubmit);
+    return 0;
 }

@@ -1,6 +1,7 @@
 #include <iostream>
 #include "string.h"
 #include "qrparam.h"
+#include "global.h"
 #include "inputanalyzer.h"
 
  qrparam::qrparam() {
@@ -22,7 +23,6 @@ void qrparam::init(QRMode qrMode, ECLevel ecLevel, int len) {
     int symbol_size = -1; 
     int size_per_sym = -1;
 //    int estimated_qrdata_size = -1;
-    int *dataCapacity;
     int version = 0;
     int R[] = {0, 4, 7};
     
@@ -35,7 +35,7 @@ void qrparam::init(QRMode qrMode, ECLevel ecLevel, int len) {
         std::cout << " QR Mode " << qrMode << " is not implemented \n";
         return;
     }
-    dataCapacity = erdata_capacity[qrMode][ecLevel];        
+    const int *dataCapacity = erdata_capacity[qrMode][ecLevel];
     for (int i=NUM_VERSION; i>0; i--) {
         if (len > dataCapacity[i]) {
             version = i;

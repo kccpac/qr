@@ -1,7 +1,6 @@
 #ifndef _INPUTANALYZER_H
 #define  _INPUTANALYZER_H
 
-#include "global.h"
 #include <iostream>
 #include <list>
 

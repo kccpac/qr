@@ -1,4 +1,6 @@
 #include "string.h"
+#include "qrconst.h"
+#include "global.h"
 #include "inputanalyzer.h"
 
 inputanalyzer::inputanalyzer() {

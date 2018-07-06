@@ -3,6 +3,7 @@
 
 //#include "stdio.h"
 //#include "global.h"
+
 #include "qrparam.h"
 #include "qrimage.h"
 
