@@ -18,7 +18,7 @@ qrencode::qrencode() {
 
 qrencode::~qrencode() {
     delete m_qrparam;
-    delete []m_ffmpeg;
+    delete [] m_ffmpeg;
 }
 
 qrencode::qrencode(char *url, QRMode qrMode, ECLevel ecLevel) : qrencode() {
@@ -113,9 +113,10 @@ bool qrencode::encode(qrsymbol symbols) {
     m_ffmpeg->setup(image.getQRImageWidth(), image.getQRImageHeight(), image.getQRImagePitch());
     bEncode.write(&symbols);
 
-    m_ffmpeg->start_encode(image.getImageData());
-    m_ffmpeg->finish_encode();
+    m_ffmpeg->encode(image.getImageData());
+  //  m_ffmpeg->finish_encode();
     m_ffmpeg->save();
+//    delete image;
     return true;
 }
    
@@ -135,7 +136,7 @@ int main(int argv, char **argc)
     qrsymbol symbols = qrencoder->charsToSymbol(qrMode, url);
 
     std::cout << " # symbol: " << symbols.len << "\n";
-   qrencoder->encode(symbols);
+    qrencoder->encode(symbols);
 
 //    delete qrSymbols;
 /*     int i;
@@ -226,7 +227,7 @@ int main(int argv, char **argc)
     delete [] symbols.codewords;
 
     delete [] analyzer;
-    delete qrencoder;
+    if (qrencoder) delete qrencoder;
 
     return 0;
 }

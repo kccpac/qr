@@ -36,7 +36,7 @@ struct qrpointer {
 
 class qrimage {
     public:
-
+        qrimage();
         qrimage(int version);
         ~qrimage();
         unsigned char * generate();

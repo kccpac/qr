@@ -97,37 +97,31 @@ AVFrame * iffmpeg::getAVFRame(unsigned char *qrimage) {
     }
     return frame;
 }
-void iffmpeg::encode(AVFrame *frame) {
+void iffmpeg::encode(AVFrame *frame,  AVPacket *pkt) {
 
-    AVPacket *pkt;
     int ret = 0;
 
-    if ((pkt = av_packet_alloc()) == NULL)  {
-        return;
-    }
-    
     if ((ret = avcodec_send_frame(m_enc_ctx, frame)) < 0) {
         std::cout << "Error sending a frame for encoding\n";
         return;
     }
-
-//    int outSize = 0;
     while (ret >= 0) {
         ret = avcodec_receive_packet(m_enc_ctx, pkt);
-         printf("ret %d \n", ret);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+        printf("ret %d \n", ret);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             return;
-        else if (ret < 0) {
+        } else if (ret < 0) {
             std::cout << "Error during encoding\n";
             return;
         }
-        printf("Write packet %3"PRId64" (size=%5d)\n", pkt->pts, pkt->size);
+        printf("Write packet %" PRId64 " (size=%5d)\n", pkt->pts, pkt->size);
         if (pkt->size + m_out_size > m_image_buffer_size) {
             int new_size = (pkt->size < DEFAULT_BUFFER_SIZE) ? DEFAULT_BUFFER_SIZE: ((pkt->size + 15) >> 4) << 4;
             unsigned char *tempBuffer = new unsigned char [m_image_buffer_size+new_size];
             memset(tempBuffer, 0, m_image_buffer_size+new_size);
             memcpy(tempBuffer, m_out_image, m_image_buffer_size);
             m_image_buffer_size += new_size;
+            delete m_out_image;
             m_out_image = tempBuffer;
         }
         memcpy(m_out_image+m_out_size, pkt->data, pkt->size);
@@ -135,20 +129,27 @@ void iffmpeg::encode(AVFrame *frame) {
         m_out_size += pkt->size;
         av_packet_unref(pkt);
     }
-    av_packet_free(&pkt);
 }
 
-void iffmpeg::start_encode(unsigned char * imageData) {
+void iffmpeg::encode(unsigned char * imageData) {
+
+    AVPacket *pkt;
+
+    if ((pkt = av_packet_alloc()) == NULL)  {
+        return;
+    }
     AVFrame *frame = getAVFRame(imageData);
-    if (frame) encode(frame);
+    if (frame) encode(frame, pkt);
+    encode(NULL, pkt);
     av_frame_free(&frame);
-
+    av_packet_free(&pkt);
+//    av_frame_free(&frame);
 }
-
+/*
 void iffmpeg::finish_encode() {
-    encode(NULL);
-}
 
+}
+*/
 void iffmpeg::save() {
 
     FILE *f = NULL ;

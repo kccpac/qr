@@ -4,6 +4,9 @@
 #include "global.h"
 #include "qrimage.h"
 
+ qrimage::qrimage() {
+    init(0);
+ }
  qrimage::qrimage(int version) {
         init(version);
 }
@@ -11,20 +14,6 @@
 qrimage::~qrimage() {
     if (m_qrBaseMemory) delete [] m_qrBaseMemory;
     m_qrBaseMemory = NULL;
-    
-//   delete []m_pdp_location;
-//   delete []m_vinfo_location;
-/*    if (m_image) {
-        for (int i=0; i<m_image_dim; i++) {
-            delete  m_image[i];
-            m_image[i] = NULL;
-        }
-        delete m_image;
-        m_image = NULL;
-    }
-    delete mAlignPatternsPosition;
-    mAlignPatternsPosition = NULL;*/
-    
 }
 
 unsigned char * qrimage::generate() {

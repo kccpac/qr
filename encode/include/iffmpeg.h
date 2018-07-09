@@ -21,12 +21,12 @@ class iffmpeg {
         ~iffmpeg();
     //    void encode(AVFrame *frame, AVPacket *pkt,  FILE *outfile);
         void setup(int width, int height, int pitch);
-        void start_encode(unsigned char *imageData);
-        void finish_encode();
+        void encode(unsigned char *imageData);
+//        void finish_encode();
         void save();
     private:
         void init();
-        void encode(AVFrame *frame);
+        void encode(AVFrame *frame, AVPacket *pkt);
         AVFrame * getAVFRame(unsigned char *qrimage) ;
         
         AVCodecContext *m_enc_ctx;
