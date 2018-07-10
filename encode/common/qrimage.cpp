@@ -5,7 +5,8 @@
 #include "qrimage.h"
 
  qrimage::qrimage() {
-    init(0);
+   // init(0);
+   //m_qrBaseMemory = NULL;
  }
  qrimage::qrimage(int version) {
         init(version);
@@ -226,7 +227,7 @@ void qrimage::init_map_object() {
     for (i=0; i<pattern_size; i++) {
         p =  mAlignPatterns[i].getStartpos();//Position[i];
         sub_map_ptr = map_ptr+ p.y*m_image_pitch + p.x;
-        for (int j=0; j<OUTER_POS_DETECT_PATTERN_SIZE; j++) {
+        for (int j=0; j<OUTER_ALIGN_PATTERN_SIZE; j++) {
             for (int k=0; k<OUTER_ALIGN_PATTERN_SIZE; k++) 
                 *(sub_map_ptr +j*m_image_pitch+k) = ALIGNMENT;
         //sub_map_ptr +j*m_image_pitch
@@ -241,7 +242,7 @@ void qrimage::init_map_object() {
         sub_map_ptr = map_ptr + p.y*m_image_pitch + p.x;
         for (j=0; j<OUTER_POS_DETECT_PATTERN_SIZE; j++) {
             for (k=0; k<OUTER_POS_DETECT_PATTERN_SIZE; k++) 
-                *(sub_map_ptr +j*m_image_pitch+k) = ALIGNMENT;
+                *(sub_map_ptr +j*m_image_pitch+k) = POSITION_DETECTION;
 //            memset(sub_map_ptr +j*m_image_pitch, POSITION_DETECTION,  size);
         }
     }
