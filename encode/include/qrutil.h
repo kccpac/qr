@@ -6,12 +6,12 @@
 #include "qrparam.h"
 
 enum ReturnAction {
-    UNKNOWN_ACTION= -1,
     FINISH = 0, 
-    NO_ACTION = 1,
-    MOVE_ASIDE = 2,
-    PASS_THROUGH = 4,
-    CHANGE_DIR = 8
+    UNKNOWN_ACTION= 1,
+    NO_ACTION = 2,
+    MOVE_ASIDE = 4,
+    PASS_THROUGH = 8,
+    CHANGE_DIR = 16
 };
 
 typedef struct ReturnValue {
