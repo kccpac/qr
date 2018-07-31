@@ -111,7 +111,7 @@ done:
     return ret;
 }
 
-ReturnValue qrutil::getPathIdx(int patterns, int i, bool isHorz) {
+ReturnValue qrutil::getPathIdx(int patterns, int i, bool isHorz) {//, bool isValid) {
 
     ReturnValue ret = {-1, 2, UNKNOWN_ACTION, NULL};
     
@@ -126,17 +126,19 @@ ReturnValue qrutil::getPathIdx(int patterns, int i, bool isHorz) {
                 break;  
    */     
         case (QUIET_ZONE + QUIET_ZONE): 
-                ret.action = isHorz ? MOVE_ASIDE + CHANGE_DIR: UNKNOWN_ACTION;
+                ret.action = isHorz ?  ((i==0) ? CHANGE_DIR:MOVE_ASIDE + CHANGE_DIR): NO_ACTION;
+ //               ret.jump_step = isHorz? OUTER_ALIGN_PATTERN_SIZE: 2;
+                printf("at boundary\n");
                 ret.idx = i;
                 break; 
         case (FORMAT_INFO + FORMAT_INFO):
  //               printf("getPathIdx - MOVE_ASIDE + CHANGE_DIR %d \n", QUIET_ZONE + QUIET_ZONE);   
                 ret.action = isHorz ? MOVE_ASIDE + CHANGE_DIR: UNKNOWN_ACTION;
-                printf("CHANGE_DIR %d \n", ret.action & CHANGE_DIR);
+ //               printf("CHANGE_DIR %d \n", ret.action & CHANGE_DIR);
                 ret.idx = i;
                 break;                       
         case (ALIGNMENT + ALIGNMENT):
-                ret.action = isHorz? PASS_THROUGH: NO_ACTION;
+                ret.action = isHorz? ((i==0) ? PASS_THROUGH:NO_ACTION): NO_ACTION;
                 ret.jump_step = isHorz? OUTER_ALIGN_PATTERN_SIZE: 2;
                 ret.idx = i;
                 break;
@@ -148,11 +150,10 @@ ReturnValue qrutil::getPathIdx(int patterns, int i, bool isHorz) {
 //        case UNKNOWN:   
 //        case (QUIET_ZONE + QUIET_ZONE):
         case (UNKNOWN + UNKNOWN):
-   //             ret.action = NO_ACTION;
-                     //       ret.jump_step = (isHorz(posMap[i])) ? 1: 2;
+                ret.action = NO_ACTION;
                 ret.jump_step =  isHorz ? 1:2;
-  //              ret.idx = i;
- //               break;
+                ret.idx = i;
+                break;
         case UNKNOWN:   
         case (UNKNOWN + UNKNOWN + UNKNOWN):
         case (UNKNOWN + UNKNOWN + UNKNOWN + UNKNOWN):
@@ -178,6 +179,7 @@ bool qrutil::isHorz(std::list<pos> posMap) {
     }
     return ret;
 }
+
 void qrutil::setSymbolBit(int *map, pos cpos, std::list<pos> posMap, int dir_sign) {
 
    printf("setSymbolBit posMap = %d\n", posMap.size());
@@ -186,7 +188,12 @@ void qrutil::setSymbolBit(int *map, pos cpos, std::list<pos> posMap, int dir_sig
         printf("setSymbolBit (%d, %d) -> ", p.x, p.y); 
         int map_pitch = m_qrimage->getQRImagePitch();
         int map_dim = m_qrimage->getQRImageWidth();  
-        if (p.x < QUIET_ZONE_SIZE || p.x > map_dim - QUIET_ZONE_SIZE - 1 || p.y < QUIET_ZONE_SIZE  || p.y  > map_dim - QUIET_ZONE_SIZE -1) {
+        if (p.x < QUIET_ZONE_SIZE ||
+            p.x > map_dim - QUIET_ZONE_SIZE - 1 ||
+            p.y < QUIET_ZONE_SIZE  ||
+            p.y  > map_dim - QUIET_ZONE_SIZE -1 ||
+            map[p.x + p.y * map_pitch] != UNKNOWN
+          ) {
             continue;
         }   
         map[p.x + p.y * map_pitch] = -5;
@@ -204,25 +211,23 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
     int i;
     ReturnValue ret =  {-1, 2, UNKNOWN_ACTION, NULL};
     int patterns = 0;
+      
+    std::list<pos> map_first_stage[4] = {
+        {{0,0}, {-1, 0}, {0, -1}, {-1, -1}},
+        {{0,0}, {-1, 0}, {-1, -1}},
+        {{-1,0}, {0, -1}, {-1, -1}},
+        {{0, 0}, {-1, 0}, {0, -1}}
+    };
     
-    std::list<pos> posMap[12] = {
-   //         {{0, 0}}, 
-   //         
-            {{0,0}, {-1, 0}, {0, -1}, {-1, -1}},
-            {{0,0}, {-1, 0}, {-1, -1}},
-            {{-1,0}, {0, -1}, {-1, -1}},
-            {{0, 0}, {-1, 0}, {0, -1}},
-            {{0,0}, {-1, 0}},
-            {{0, -1}, {-1, -1}},
-            {{-1, 0}, {-1, -1}},
- //           {{0,0}, {-1, 0}}
-            {{0,0}, {0, -1}},
-            {{0,0}},
-            {{-1,0}},
-            {{0,-1}},
-            {{-1,-1}}
+    std::list<pos> map_second_stage[3][8] = {
+        {}, 
+        { {{0,0}, {-1, 0}}, {{0, -1}, {-1, -1}}, {{0,0}, {0, -1}}, {{-1, 0}, {-1, -1}}, // UP
+            {{0,0}}, {{-1,0}}, {{0,-1}}, {{-1,-1}} },
+    { {{0, -1}, {-1, -1}}, {{0,0}, {-1, 0}}, {{-1, 0}, {-1, -1}}, {{0,0}, {0, -1}},  // DOWN
+        {{0,0}},  {{-1,0}},  {{0,-1}}, {{-1,-1}} }
+    };
 
-            };
+     //                   p = {cpos.x + p.x, cpos.y+dir_sign*p.y};
 /*           
     pos ppos1[] = {{0,0}, {0, -1}, {-1, -1}, {1, 0}};
     int num_pos1 = sizeof(ppos1)/sizeof(pos);
@@ -248,15 +253,16 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
     if (pathIdx == -1)
         goto done;*/
     int pCounter;
-    int *pattern = new int [posMap[0].size()];
+    int *pattern = new int [map_first_stage[0].size()];//new int [posMap[0].size()];
     int pathIdx=-1;
+ //   std::list<pos> tmpMap[] = map_first_stage;
 //    int i;
-    int listsize = sizeof(posMap)/sizeof(std::list<pos>);
-    printf("listsize %d\n", listsize);
+ //   int listsize = sizeof(map_first_stage)/sizeof(std::list<pos>);
+    printf("map_first_stage size %d map_second_stage %d \n", sizeof(map_first_stage)/sizeof(std::list<pos>), sizeof(map_second_stage[0])/sizeof(std::list<pos>));
     for (i=0; i<4; i++) {
         pCounter = patterns = 0;    
         printf("Loop %d\n", i);     
-        for (auto p: posMap[i]) {
+        for (auto p: map_first_stage[i]) {
             printf("(%d, %d) -> ", p.x, p.y);
             p = {cpos.x + p.x, cpos.y+dir_sign*p.y};
             
@@ -272,11 +278,11 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
            
         }
         printf("pattern %d\n", patterns);
-        ret = getPathIdx(patterns, i, isHorz(posMap[i]));
+        ret = getPathIdx(patterns, i, isHorz(map_first_stage[i]));//, isValid(cpos, map_first_stage[i], sdir));
         printf("ret.idx %d ret.action %d\n", ret.idx, ret.action);
         if (ret.action >= NO_ACTION) {
-        pathIdx = i;
-        break;
+            pathIdx = i;
+            break;
         }   
     }
     
@@ -290,10 +296,11 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
     
     if (pathIdx == -1) {
     
-        for (i=4; i<12; i++) {
+  //      tmpMap = map_second_stage[sdir];
+        for (i=0; i<sizeof(map_second_stage[0])/sizeof(std::list<pos>)/*map_second_stage[sdir].size()*/; i++) {
         pCounter = patterns = 0;    
-        printf("Loop %d\n", i);     
-        for (auto p: posMap[i]) {
+        printf("Loop %d sdir %d %d \n", i, sdir, map_second_stage[sdir][i].size());
+        for (auto p: map_second_stage[sdir][i]) {
             printf("(%d, %d) -> ", p.x, p.y);
             p = {cpos.x + p.x, cpos.y+dir_sign*p.y};
             
@@ -302,17 +309,16 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
             patterns+= pattern[pCounter];
             printf("(%d, %d) pattern[pCounter] %d\n", p.x, p.y, pattern[pCounter]);
             pCounter++;
-           
         }
-        printf("pattern %d\n", patterns);
-        ret = getPathIdx(patterns, i, isHorz(posMap[i]));
-        
-        if (ret.action == NO_ACTION) {
-            setSymbolBit(map, cpos, posMap[i], dir_sign);
-        } 
+
+        ret = getPathIdx(patterns, i, isHorz(map_second_stage[sdir][i]));//, isValid(cpos, map_second_stage[sdir][i], sdir));
+       printf("pattern %d ret.action & CHANGE_DIR %d \n", patterns, ret.action & CHANGE_DIR);
+        if (ret.action & CHANGE_DIR || ret.action & PASS_THROUGH || ret.action == NO_ACTION) {
+            setSymbolBit(map, cpos, /* posMap[0]*/ map_first_stage[0], dir_sign);
+     /*   } 
         if (ret.action & CHANGE_DIR ||
             ret.action & PASS_THROUGH ||
-            ret.action == NO_ACTION ) {
+            ret.action == NO_ACTION ) {*/
             return ret;
         }
 
@@ -323,7 +329,7 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
     return ret;
     }
     
-    setSymbolBit(map, cpos, posMap[pathIdx], dir_sign);
+    setSymbolBit(map, cpos, map_first_stage[0], dir_sign);
      
 
     
@@ -575,17 +581,20 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
 
 
         if (ret_value.action & CHANGE_DIR) {
-            bool onemodule = (sdir & CHECK_ONE_MODULE_ONLY);
-            sdir = (sdir & UP) ? DOWN: UP;
-            sdir = (onemodule) ? (PLACEMENT_TYPE) (sdir | CHECK_ONE_MODULE_ONLY): sdir;
-            cur_pos.y =  (sdir & UP) ? cur_pos.y - 1:  cur_pos.y + 1;
+      //      bool onemodule = (sdir & CHECK_ONE_MODULE_ONLY);
+                printf("cur_pos.x %d cur_pos.y %d  ret_value.action & MOVE_ASIDE %d \n", cur_pos.x, cur_pos.y, ret_value.action & MOVE_ASIDE);
+                sdir = (sdir & UP) ? DOWN: UP;
+      //      sdir = (onemodule) ? (PLACEMENT_TYPE) (sdir | CHECK_ONE_MODULE_ONLY): sdir;
+
+//            if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE))  &&cur_pos.y >= QUIET_ZONE_SIZE)
+            cur_pos.y =  (ret_value.action & MOVE_ASIDE) ? cur_pos.y: ((sdir & UP) ? cur_pos.y - 1:  cur_pos.y + 1);
         } else if (ret_value.action & PASS_THROUGH) {
             cur_pos.y =  (sdir & UP) ? cur_pos.y - ret_value.jump_step:  cur_pos.y  + ret_value.jump_step;
         }
         else {
              if (sdir & UP) {
-                if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE))  && (cur_pos.y >= QUIET_ZONE_SIZE + ret_value.jump_step)) {
-                 cur_pos.y -=  ret_value.jump_step;
+                if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE)) && (cur_pos.y >= QUIET_ZONE_SIZE + ret_value.jump_step)) {
+                    cur_pos.y -=  ret_value.jump_step;
 //                } else if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE))  && cur_pos.y > QUIET_ZONE_SIZE  && cur_pos.y < QUIET_ZONE_SIZE + ret_value.jump_step) {
 //                 cur_pos.y  = QUIET_ZONE_SIZE;
                  } else {
@@ -594,7 +603,7 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
                     cur_pos.y -=1;
                 } 
             } else {   
-                if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE - ret_value.jump_step))  && cur_pos.y >= QUIET_ZONE_SIZE) {
+                if ((cur_pos.y < (map_dim - QUIET_ZONE_SIZE - ret_value.jump_step)) && cur_pos.y >= QUIET_ZONE_SIZE) {
                     cur_pos.y += ret_value.jump_step;// 2;
                 } else {    
                      ret_value.action = MOVE_ASIDE;
@@ -639,6 +648,7 @@ ReturnValue qrutil::getNextAction(pos cpos, pos ppos[], PLACEMENT_TYPE sdir, boo
     } 
     printf("print empty image ends \n"); 
  }
+ 
   /*
   bool detectUsedBits(pos startpos) {
         int i, j;
